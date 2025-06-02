@@ -315,6 +315,8 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 0.5em;
+  min-width: 420px;
+  max-width: 100%;
 }
 
 .secondary-actions button {
