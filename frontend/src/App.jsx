@@ -304,8 +304,29 @@ function App() {
       <div className="container">
         <h1>Finance Portfolio Tool</h1>
         {/* Cash Balance Section */}
-        <div className="cash-balance-section" style={{ marginBottom: '1.5em', display: 'flex', alignItems: 'center', gap: '1em' }}>
-          <label htmlFor="cash-balance" style={{ fontWeight: 600 }}>Cash Balance:</label>
+        <div
+          className="cash-balance-section"
+          style={{
+            marginBottom: '2em',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1.2em',
+            background: 'rgba(34, 34, 59, 0.95)',
+            border: '1.5px solid #23272f',
+            borderRadius: '12px',
+            boxShadow: '0 2px 16px #181c2633',
+            padding: '1.1em 2em',
+            maxWidth: 420,
+            marginLeft: 'auto',
+            marginRight: 'auto',
+          }}
+        >
+          <span style={{ fontSize: '1.7em', color: '#FFD700', marginRight: '0.2em' }}>
+            💰
+          </span>
+          <label htmlFor="cash-balance" style={{ fontWeight: 700, fontSize: '1.1em', color: '#F2E9E4', marginRight: '0.5em' }}>
+            Cash Balance
+          </label>
           <input
             type="number"
             id="cash-balance"
@@ -313,10 +334,36 @@ function App() {
             min="0"
             step="0.01"
             onChange={handleCashChange}
-            style={{ width: '120px', fontSize: '1.1em', padding: '0.3em 0.7em' }}
+            style={{
+              width: '120px',
+              fontSize: '1.1em',
+              padding: '0.4em 0.7em',
+              border: '1.5px solid #60a5fa',
+              borderRadius: '6px',
+              background: '#181c26',
+              color: '#F2E9E4',
+              outline: 'none',
+              boxShadow: '0 1px 6px #2563eb22',
+              transition: 'border 0.2s, box-shadow 0.2s',
+            }}
             disabled={cashLoading}
           />
-          <button onClick={saveCashBalance} disabled={cashLoading} className="primary-btn">
+          <button
+            onClick={saveCashBalance}
+            disabled={cashLoading}
+            className="primary-btn"
+            style={{
+              background: 'linear-gradient(90deg, #2563eb 60%, #60a5fa 100%)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: 600,
+              fontSize: '1.05em',
+              padding: '0.45em 1.3em',
+              boxShadow: '0 2px 8px #2563eb33',
+              letterSpacing: '0.03em',
+            }}
+          >
             {cashLoading ? 'Saving...' : 'Save'}
           </button>
           {cashError && <span className="error" style={{ marginLeft: '1em' }}>{cashError}</span>}
@@ -442,7 +489,7 @@ function App() {
               <tfoot>
                 <tr>
                   <td colSpan="4"><strong>Grand Total</strong></td>
-                  <td>{refreshing ? <span className="price-spinner"></span> : `$${portfolio.grand_total_portfolio_value}`}</td>
+                  <td>{refreshing ? <span className="price-spinner"></span> : `$${tableTotalValue.toFixed(2)}`}</td>
                   <td></td>
                 </tr>
               </tfoot>
