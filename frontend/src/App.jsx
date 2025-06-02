@@ -202,19 +202,17 @@ function App() {
         <div className="actions-row">
           <div className="secondary-actions">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.7em' }}>
+              <button onClick={refreshPrices} disabled={refreshing}>
+                {refreshing ? 'Refreshing...' : 'Refresh Prices'}
+              </button>
               <button onClick={handleTestConnection} disabled={testLoading}>
                 {testLoading ? 'Testing...' : 'Test API Connection'}
               </button>
               {testStatus && (
-                <div className={testStatus.status === 'success' ? 'success' : 'error'} style={{margin: 0, minWidth: '120px', textAlign: 'left'}}>
+                <div className={testStatus.status === 'success' ? 'success' : 'error'} style={{margin: 0, minWidth: '200px', textAlign: 'left'}}>
                   {testStatus.message} {testStatus.price ? `(Sample price: $${testStatus.price})` : ''}
                 </div>
               )}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <button onClick={refreshPrices} disabled={refreshing}>
-                {refreshing ? 'Refreshing...' : 'Refresh Prices'}
-              </button>
             </div>
           </div>
         </div>
