@@ -233,7 +233,7 @@ h1 {
   display: flex;
   flex-direction: row;
   gap: 2.5rem;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: flex-start;
   width: 100%;
 }
@@ -252,10 +252,18 @@ h1 {
   padding: 2rem 1.5rem;
   min-width: 340px;
   max-width: 400px;
-  margin-top: 1.5rem;
+  margin-top: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
+  height: 100%;
+}
+
+.pie-chart-section {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  height: 100%;
 }
 
 @media (max-width: 900px) {
@@ -267,8 +275,83 @@ h1 {
     min-width: unset;
     max-width: 100%;
     margin: 0 auto 2rem auto;
+    height: auto;
+  }
+  .pie-chart-section {
+    flex-direction: column;
+    height: auto;
   }
   .table-container {
     margin-top: 0;
+  }
+}
+
+/* --- Actions Row Layout --- */
+.actions-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 2em;
+  margin-bottom: 1.5em;
+  flex-wrap: wrap;
+}
+
+.add-stock-form {
+  display: flex;
+  gap: 0.5em;
+  align-items: flex-end;
+}
+
+.primary-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.5em 1.2em;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.secondary-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.secondary-actions button {
+  background: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+  color: #fff;
+  border: none;
+  padding: 0.5em 1.2em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  min-width: 170px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px #2563eb33;
+  transition: background 0.2s, box-shadow 0.2s;
+  letter-spacing: 0.03em;
+}
+.secondary-actions button:hover {
+  background: linear-gradient(90deg, #1d4ed8 60%, #60a5fa 100%);
+  box-shadow: 0 4px 16px #2563eb55;
+}
+
+.secondary-actions > div > .success,
+.secondary-actions > div > .error {
+  min-width: 120px;
+  max-width: 220px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+@media (max-width: 600px) {
+  .actions-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1em;
+  }
+  .secondary-actions {
+    flex-direction: row;
+    gap: 0.5em;
   }
 }

@@ -150,7 +150,18 @@ function App() {
         method: 'DELETE',
       })
       if (!res.ok) throw new Error('Failed to delete stock')
-      fetchPortfolio()
+      // Update portfolio locally instead of refetching
+      setPortfolio(prev => {
+        if (!prev || !prev.stocks) return prev
+        const stocks = prev.stocks.filter(s => s.symbol !== symbol)
+        // Recalculate grand total
+        const grand_total = stocks.reduce((sum, s) => sum + (s.current_total_value || 0), 0)
+        // Recalculate percentages
+        stocks.forEach(s => {
+          s.percentage_of_portfolio = grand_total > 0 && s.current_total_value != null ? Number(((s.current_total_value / grand_total) * 100).toFixed(2)) : null
+        })
+        return { stocks, grand_total_portfolio_value: Number(grand_total.toFixed(2)) }
+      })
     } catch (err) {
       setError('Error deleting stock.')
     }
@@ -188,35 +199,43 @@ function App() {
     <div className="flex-row">
       <div className="container">
         <h1>Finance Portfolio Tool</h1>
-        <div className="table-container">
-          <form onSubmit={handleAddStock} className="add-stock-form">
-            <input
-              type="text"
-              placeholder="Stock Symbol (e.g. AAPL)"
-              value={symbol}
-              onChange={e => setSymbol(e.target.value.toUpperCase())}
-            />
-            <input
-              type="number"
-              placeholder="Quantity"
-              value={quantity}
-              min="0"
-              step="any"
-              onChange={e => setQuantity(e.target.value)}
-            />
-            <button type="submit">Add Stock</button>
-          </form>
-          <button onClick={handleTestConnection} disabled={testLoading} style={{marginBottom: '1em'}}>
-            {testLoading ? 'Testing...' : 'Test API Connection'}
-          </button>
-          <button onClick={refreshPrices} disabled={refreshing} style={{marginBottom: '1em', marginLeft: '1em'}}>
-            {refreshing ? 'Refreshing...' : 'Refresh Prices'}
-          </button>
-          {testStatus && (
-            <div className={testStatus.status === 'success' ? 'success' : 'error'}>
-              {testStatus.message} {testStatus.price ? `(Sample price: $${testStatus.price})` : ''}
+        <div className="actions-row">
+          <div className="secondary-actions">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.7em' }}>
+              <button onClick={handleTestConnection} disabled={testLoading}>
+                {testLoading ? 'Testing...' : 'Test API Connection'}
+              </button>
+              {testStatus && (
+                <div className={testStatus.status === 'success' ? 'success' : 'error'} style={{margin: 0, minWidth: '120px', textAlign: 'left'}}>
+                  {testStatus.message} {testStatus.price ? `(Sample price: $${testStatus.price})` : ''}
+                </div>
+              )}
             </div>
-          )}
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <button onClick={refreshPrices} disabled={refreshing}>
+                {refreshing ? 'Refreshing...' : 'Refresh Prices'}
+              </button>
+            </div>
+          </div>
+        </div>
+        <form onSubmit={handleAddStock} className="add-stock-form">
+          <input
+            type="text"
+            placeholder="Stock Symbol (e.g. AAPL)"
+            value={symbol}
+            onChange={e => setSymbol(e.target.value.toUpperCase())}
+          />
+          <input
+            type="number"
+            placeholder="Quantity"
+            value={quantity}
+            min="0"
+            step="any"
+            onChange={e => setQuantity(e.target.value)}
+          />
+          <button type="submit" className="primary-btn">Add Stock</button>
+        </form>
+        <div className="table-container">
           {error && <div className="error">{error}</div>}
           {loading ? (
             <div>Loading portfolio...</div>
