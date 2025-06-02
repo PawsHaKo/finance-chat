@@ -4,7 +4,41 @@ import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'
 
 const API_BASE = 'http://localhost:8000'
 
-const COLORS = ['#60a5fa', '#f87171', '#34d399', '#fbbf24', '#a78bfa', '#f472b6', '#818cf8', '#facc15', '#fb7185', '#38bdf8']
+const COLORS = [
+  '#60a5fa', // blue
+  '#f87171', // red
+  '#34d399', // green
+  '#fbbf24', // yellow
+  '#a78bfa', // purple
+  '#f472b6', // pink
+  '#818cf8', // indigo
+  '#facc15', // gold
+  '#fb7185', // rose
+  '#38bdf8', // sky
+  '#10b981', // emerald
+  '#f59e42', // orange
+  '#6366f1', // violet
+  '#eab308', // amber
+  '#84cc16', // lime
+  '#f43f5e', // pink-red
+  '#0ea5e9', // cyan
+  '#a3e635', // light green
+  '#fcd34d', // light yellow
+  '#c084fc', // light purple
+  '#fca5a5', // light red
+  '#fdba74', // light orange
+  '#bef264', // light lime
+  '#f9a8d4', // light pink
+  '#6ee7b7', // mint
+  '#fef08a', // pale yellow
+  '#d1fae5', // pale green
+  '#f3e8ff', // pale purple
+  '#fef3c7', // pale gold
+  '#e0e7ff', // pale indigo
+]
+
+const CASH_COLOR = '#FFD700' // gold for cash
+const STOCK_COLORS = COLORS.filter(c => c !== CASH_COLOR)
 
 function App() {
   const [symbol, setSymbol] = useState('')
@@ -18,8 +52,14 @@ function App() {
   const [editQuantity, setEditQuantity] = useState('')
   const [refreshing, setRefreshing] = useState(false)
   const [refreshingStocks, setRefreshingStocks] = useState([])
+  const [cash, setCash] = useState('')
+  const [cashEdit, setCashEdit] = useState('')
+  const [cashLoading, setCashLoading] = useState(false)
+  const [cashError, setCashError] = useState('')
+  const [cashSuccess, setCashSuccess] = useState('')
+  const [showCashInPie, setShowCashInPie] = useState(false)
 
-  // Fetch portfolio on mount and after adding stock
+  // Fetch portfolio and cash on mount
   const fetchPortfolio = async () => {
     setLoading(true)
     setError('')
@@ -28,6 +68,10 @@ function App() {
       if (!res.ok) throw new Error('Failed to fetch portfolio')
       const data = await res.json()
       setPortfolio(data)
+      if (typeof data.cash === 'number') {
+        setCash(data.cash)
+        setCashEdit(data.cash)
+      }
     } catch (err) {
       setError('Error fetching portfolio.')
     } finally {
@@ -187,18 +231,85 @@ function App() {
   }
 
   // Prepare data for Pie Chart
-  const chartData = (portfolio?.stocks || [])
+  let chartData = (portfolio?.stocks || [])
     .filter(stock => stock.percentage_of_portfolio != null && stock.percentage_of_portfolio > 0)
     .map((stock, idx) => ({
       name: stock.symbol,
-      value: stock.percentage_of_portfolio,
-      color: COLORS[idx % COLORS.length]
+      value: stock.current_total_value || 0,
+      color: STOCK_COLORS[idx % STOCK_COLORS.length]
     }))
+
+  if (showCashInPie && typeof cash === 'number' && cash > 0) {
+    chartData = [
+      ...chartData,
+      {
+        name: 'Cash',
+        value: cash,
+        color: CASH_COLOR
+      }
+    ]
+  }
+
+  // Cash handlers
+  const handleCashChange = (e) => {
+    setCashEdit(e.target.value)
+    setCashError('')
+    setCashSuccess('')
+  }
+
+  const saveCashBalance = async () => {
+    setCashLoading(true)
+    setCashError('')
+    setCashSuccess('')
+    try {
+      const value = parseFloat(cashEdit)
+      if (isNaN(value) || value < 0) {
+        setCashError('Please enter a valid non-negative number.')
+        setCashLoading(false)
+        return
+      }
+      const res = await fetch(`${API_BASE}/portfolio/cash/`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cash: value })
+      })
+      if (!res.ok) throw new Error('Failed to update cash')
+      const data = await res.json()
+      setCash(data.cash)
+      setCashEdit(data.cash)
+      setCashSuccess('Cash balance updated!')
+      // Optionally refresh portfolio to update grand total
+      fetchPortfolio()
+    } catch (err) {
+      setCashError('Error updating cash balance.')
+    } finally {
+      setCashLoading(false)
+    }
+  }
 
   return (
     <div className="flex-row">
       <div className="container">
         <h1>Finance Portfolio Tool</h1>
+        {/* Cash Balance Section */}
+        <div className="cash-balance-section" style={{ marginBottom: '1.5em', display: 'flex', alignItems: 'center', gap: '1em' }}>
+          <label htmlFor="cash-balance" style={{ fontWeight: 600 }}>Cash Balance:</label>
+          <input
+            type="number"
+            id="cash-balance"
+            value={cashEdit}
+            min="0"
+            step="0.01"
+            onChange={handleCashChange}
+            style={{ width: '120px', fontSize: '1.1em', padding: '0.3em 0.7em' }}
+            disabled={cashLoading}
+          />
+          <button onClick={saveCashBalance} disabled={cashLoading} className="primary-btn">
+            {cashLoading ? 'Saving...' : 'Save'}
+          </button>
+          {cashError && <span className="error" style={{ marginLeft: '1em' }}>{cashError}</span>}
+          {cashSuccess && <span className="success" style={{ marginLeft: '1em', color: '#34d399' }}>{cashSuccess}</span>}
+        </div>
         <div className="actions-row">
           <div className="secondary-actions">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.7em' }}>
@@ -320,23 +431,34 @@ function App() {
       {chartData.length > 0 && (
         <div className="container pie-chart-container">
           <h1>Portfolio Pie Chart</h1>
-            <PieChart width={350} height={250}>
-              <Pie
-                data={chartData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                label
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
+          <div style={{ marginBottom: '1em' }}>
+            <label style={{ fontWeight: 500 }}>
+              <input
+                type="checkbox"
+                checked={showCashInPie}
+                onChange={e => setShowCashInPie(e.target.checked)}
+                style={{ marginRight: '0.5em' }}
+              />
+              Show cash in pie chart
+            </label>
+          </div>
+          <PieChart width={350} height={250}>
+            <Pie
+              data={chartData}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              outerRadius={80}
+              label
+            >
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip />
+            <Legend />
+          </PieChart>
         </div>
       )}
     </div>

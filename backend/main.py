@@ -43,6 +43,12 @@ class Stock(Base):
     symbol: Mapped[str] = mapped_column(sa.String, unique=True, index=True)
     quantity: Mapped[float] = mapped_column(sa.Float)
 
+# SQLAlchemy model for PortfolioMeta (singleton for cash)
+class PortfolioMeta(Base):
+    __tablename__ = "portfolio_meta"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    cash: Mapped[float] = mapped_column(sa.Float, default=0.0)
+
 # Pydantic model for basic stock data (input)
 class StockBase(BaseModel):
     symbol: str
@@ -54,10 +60,15 @@ class StockPortfolioItem(StockBase):
     current_total_value: Optional[float] = None
     percentage_of_portfolio: Optional[float] = None
 
+# Pydantic model for cash
+class CashResponse(BaseModel):
+    cash: float
+
 # Pydantic model for the overall portfolio response
 class PortfolioDetailResponse(BaseModel):
     stocks: List[StockPortfolioItem]
     grand_total_portfolio_value: Optional[float] = None
+    cash: Optional[float] = None
 
 # Dependency to get async DB session
 async def get_session() -> AsyncSession:
@@ -68,6 +79,14 @@ async def get_session() -> AsyncSession:
 async def on_startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    # Ensure singleton PortfolioMeta row exists
+    async with async_session() as session:
+        result = await session.execute(select(PortfolioMeta))
+        meta = result.scalar_one_or_none()
+        if not meta:
+            meta = PortfolioMeta(cash=0.0)
+            session.add(meta)
+            await session.commit()
 
 @app.get("/")
 async def read_root():
@@ -112,7 +131,6 @@ async def add_stock_manually(stock: StockBase, session: AsyncSession = Depends(g
 
 @app.get("/portfolio/stocks/", response_model=PortfolioDetailResponse)
 async def get_portfolio_with_details(session: AsyncSession = Depends(get_session)):
-    """Retrieve all stocks in the portfolio with current price, total value, and percentage of portfolio."""
     result = await session.execute(select(Stock))
     stocks_in_db = result.scalars().all()
     detailed_portfolio_items: List[StockPortfolioItem] = []
@@ -140,9 +158,15 @@ async def get_portfolio_with_details(session: AsyncSession = Depends(get_session
             if item.current_total_value is not None:
                 item.percentage_of_portfolio = round((item.current_total_value / grand_total_portfolio_value) * 100, 2)
 
+    # Fetch cash
+    result = await session.execute(select(PortfolioMeta))
+    meta = result.scalar_one_or_none()
+    cash = meta.cash if meta else 0.0
+
     return PortfolioDetailResponse(
         stocks=detailed_portfolio_items,
-        grand_total_portfolio_value=round(grand_total_portfolio_value, 2) if grand_total_portfolio_value > 0 else 0.0
+        grand_total_portfolio_value=round(grand_total_portfolio_value, 2) if grand_total_portfolio_value > 0 else 0.0,
+        cash=cash
     )
 
 @app.get("/test-connection")
@@ -221,4 +245,25 @@ async def get_stock_with_details(symbol: str = Path(..., description="Stock symb
         current_price=current_price,
         current_total_value=current_total_value,
         percentage_of_portfolio=percentage_of_portfolio
-    ) 
+    )
+
+@app.get("/portfolio/cash/", response_model=CashResponse)
+async def get_cash(session: AsyncSession = Depends(get_session)):
+    result = await session.execute(select(PortfolioMeta))
+    meta = result.scalar_one_or_none()
+    if not meta:
+        raise HTTPException(status_code=404, detail="Portfolio meta not found")
+    return CashResponse(cash=meta.cash)
+
+@app.put("/portfolio/cash/", response_model=CashResponse)
+async def set_cash(cash: CashResponse, session: AsyncSession = Depends(get_session)):
+    result = await session.execute(select(PortfolioMeta))
+    meta = result.scalar_one_or_none()
+    if not meta:
+        raise HTTPException(status_code=404, detail="Portfolio meta not found")
+    if cash.cash < 0:
+        raise HTTPException(status_code=400, detail="Cash cannot be negative")
+    meta.cash = cash.cash
+    await session.commit()
+    await session.refresh(meta)
+    return CashResponse(cash=meta.cash) 
