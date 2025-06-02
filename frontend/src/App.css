@@ -1,0 +1,213 @@
+body, #root {
+  background: #10141a;
+  color: #e5e7eb;
+  font-family: 'Inter', 'Roboto', Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+.container {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 2rem 2.5rem;
+  background: rgba(24, 28, 38, 0.98);
+  border-radius: 16px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.45), 0 0 0 1.5px #23272f;
+  border: 1.5px solid #23272f;
+}
+h1 {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2.2rem;
+  letter-spacing: 0.04em;
+  color: #60a5fa;
+  text-shadow: 0 0 8px #2563eb44;
+}
+.add-stock-form {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  justify-content: center;
+}
+.add-stock-form input {
+  padding: 0.5rem 1rem;
+  border: 1.5px solid #23272f;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #181c26;
+  color: #e5e7eb;
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+.add-stock-form input:focus {
+  border: 1.5px solid #60a5fa;
+  box-shadow: 0 0 0 2px #2563eb33;
+}
+.add-stock-form button {
+  padding: 0.5rem 1.5rem;
+  background: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px #2563eb33;
+  transition: background 0.2s, box-shadow 0.2s;
+  letter-spacing: 0.03em;
+}
+.add-stock-form button:hover {
+  background: linear-gradient(90deg, #1d4ed8 60%, #60a5fa 100%);
+  box-shadow: 0 4px 16px #2563eb55;
+}
+.portfolio-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: #181c26;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 16px #181c2633;
+}
+.portfolio-table th, .portfolio-table td {
+  padding: 0.7rem 0.7rem;
+  text-align: center;
+  border-bottom: 1px solid #23272f;
+}
+.portfolio-table th {
+  background: #23272f;
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  border-bottom: 2px solid #2563eb;
+}
+.portfolio-table tr:last-child td {
+  border-bottom: none;
+}
+.portfolio-table tfoot td {
+  font-weight: 700;
+  background: #23272f;
+  color: #fff;
+  border-top: 2px solid #2563eb;
+  font-size: 1.1rem;
+}
+.error {
+  color: #f87171;
+  background: #2b1a1a;
+  border: 1px solid #7f1d1d;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-weight: 500;
+  box-shadow: 0 0 8px #7f1d1d33;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: #181c26;
+}
+::-webkit-scrollbar-thumb {
+  background: #23272f;
+  border-radius: 8px;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 1rem 0.5rem;
+  }
+  .add-stock-form {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .portfolio-table th, .portfolio-table td {
+    padding: 0.5rem 0.2rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* Action buttons for table */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.action-btn {
+  padding: 0.3rem 0.9rem;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.98rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s;
+  box-shadow: 0 1px 4px #2563eb22;
+}
+.action-btn.edit {
+  background: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+  color: #fff;
+}
+.action-btn.edit:hover {
+  background: linear-gradient(90deg, #1d4ed8 60%, #60a5fa 100%);
+}
+.action-btn.delete {
+  background: linear-gradient(90deg, #f87171 60%, #fbbf24 100%);
+  color: #fff;
+}
+.action-btn.delete:hover {
+  background: linear-gradient(90deg, #dc2626 60%, #fbbf24 100%);
+}
+/* Style for inline input in table */
+.portfolio-table input[type="number"] {
+  padding: 0.3rem 0.5rem;
+  border: 1.5px solid #23272f;
+  border-radius: 5px;
+  font-size: 1rem;
+  background: #23272f;
+  color: #e5e7eb;
+  width: 70px;
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+.portfolio-table input[type="number"]:focus {
+  border: 1.5px solid #60a5fa;
+  box-shadow: 0 0 0 2px #2563eb33;
+}
