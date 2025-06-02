@@ -57,7 +57,7 @@ function App() {
   const [cashLoading, setCashLoading] = useState(false)
   const [cashError, setCashError] = useState('')
   const [cashSuccess, setCashSuccess] = useState('')
-  const [showCashInPie, setShowCashInPie] = useState(false)
+  const [showCashInPie, setShowCashInPie] = useState(true)
 
   // Fetch portfolio and cash on mount
   const fetchPortfolio = async () => {
@@ -294,10 +294,10 @@ function App() {
     }
   }
 
-  // Calculate total portfolio value (stocks + cash)
+  // Calculate total portfolio value for table percentages
   const stocksTotal = (portfolio?.stocks || []).reduce((sum, s) => sum + (s.current_total_value || 0), 0)
-  const totalPortfolioValue = (typeof cash === 'number' ? cash : 0) + stocksTotal
-  const cashPercentage = totalPortfolioValue > 0 ? ((cash / totalPortfolioValue) * 100).toFixed(2) : null
+  const tableTotalValue = showCashInPie && typeof cash === 'number' ? stocksTotal + cash : stocksTotal
+  const cashPercentage = showCashInPie && tableTotalValue > 0 ? ((cash / tableTotalValue) * 100).toFixed(2) : null
 
   return (
     <div className="flex-row">
@@ -408,8 +408,8 @@ function App() {
                       {refreshingStocks.includes(stock.symbol) && refreshing ? (
                         <span className="price-spinner"></span>
                       ) : (
-                        (stock.current_total_value != null && totalPortfolioValue > 0)
-                          ? `${((stock.current_total_value / totalPortfolioValue) * 100).toFixed(2)}%`
+                        (stock.current_total_value != null && tableTotalValue > 0)
+                          ? `${((stock.current_total_value / tableTotalValue) * 100).toFixed(2)}%`
                           : 'N/A'
                       )}
                     </td>
@@ -428,7 +428,7 @@ function App() {
                     </td>
                   </tr>
                 ))}
-                {typeof cash === 'number' && (
+                {showCashInPie && typeof cash === 'number' && (
                   <tr key="cash-row" style={{ background: '#23272f' }}>
                     <td style={{ fontWeight: 600, color: '#FFD700' }}>Cash</td>
                     <td>–</td>
