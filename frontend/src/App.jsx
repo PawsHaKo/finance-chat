@@ -185,126 +185,124 @@ function App() {
     }))
 
   return (
-    <>
+    <div className="flex-row">
       <div className="container">
         <h1>Finance Portfolio Tool</h1>
-        <div className="flex-row">
-          <div className="table-container">
-            <form onSubmit={handleAddStock} className="add-stock-form">
-              <input
-                type="text"
-                placeholder="Stock Symbol (e.g. AAPL)"
-                value={symbol}
-                onChange={e => setSymbol(e.target.value.toUpperCase())}
-              />
-              <input
-                type="number"
-                placeholder="Quantity"
-                value={quantity}
-                min="0"
-                step="any"
-                onChange={e => setQuantity(e.target.value)}
-              />
-              <button type="submit">Add Stock</button>
-            </form>
-            <button onClick={handleTestConnection} disabled={testLoading} style={{marginBottom: '1em'}}>
-              {testLoading ? 'Testing...' : 'Test API Connection'}
-            </button>
-            <button onClick={refreshPrices} disabled={refreshing} style={{marginBottom: '1em', marginLeft: '1em'}}>
-              {refreshing ? 'Refreshing...' : 'Refresh Prices'}
-            </button>
-            {testStatus && (
-              <div className={testStatus.status === 'success' ? 'success' : 'error'}>
-                {testStatus.message} {testStatus.price ? `(Sample price: $${testStatus.price})` : ''}
-              </div>
-            )}
-            {error && <div className="error">{error}</div>}
-            {loading ? (
-              <div>Loading portfolio...</div>
-            ) : portfolio && portfolio.stocks && portfolio.stocks.length > 0 ? (
-              <table className="portfolio-table">
-                <thead>
-                  <tr>
-                    <th>Symbol</th>
-                    <th>Quantity</th>
-                    <th>Current Price</th>
-                    <th>Total Value</th>
-                    <th>% of Portfolio</th>
-                    <th>Actions</th>
+        <div className="table-container">
+          <form onSubmit={handleAddStock} className="add-stock-form">
+            <input
+              type="text"
+              placeholder="Stock Symbol (e.g. AAPL)"
+              value={symbol}
+              onChange={e => setSymbol(e.target.value.toUpperCase())}
+            />
+            <input
+              type="number"
+              placeholder="Quantity"
+              value={quantity}
+              min="0"
+              step="any"
+              onChange={e => setQuantity(e.target.value)}
+            />
+            <button type="submit">Add Stock</button>
+          </form>
+          <button onClick={handleTestConnection} disabled={testLoading} style={{marginBottom: '1em'}}>
+            {testLoading ? 'Testing...' : 'Test API Connection'}
+          </button>
+          <button onClick={refreshPrices} disabled={refreshing} style={{marginBottom: '1em', marginLeft: '1em'}}>
+            {refreshing ? 'Refreshing...' : 'Refresh Prices'}
+          </button>
+          {testStatus && (
+            <div className={testStatus.status === 'success' ? 'success' : 'error'}>
+              {testStatus.message} {testStatus.price ? `(Sample price: $${testStatus.price})` : ''}
+            </div>
+          )}
+          {error && <div className="error">{error}</div>}
+          {loading ? (
+            <div>Loading portfolio...</div>
+          ) : portfolio && portfolio.stocks && portfolio.stocks.length > 0 ? (
+            <table className="portfolio-table">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Quantity</th>
+                  <th>Current Price</th>
+                  <th>Total Value</th>
+                  <th>% of Portfolio</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {portfolio.stocks.map(stock => (
+                  <tr key={stock.symbol}>
+                    <td>{stock.symbol}</td>
+                    <td>
+                      {editSymbol === stock.symbol ? (
+                        <input
+                          type="number"
+                          value={editQuantity}
+                          min="0"
+                          step="any"
+                          onChange={e => setEditQuantity(e.target.value)}
+                          style={{ width: '70px' }}
+                        />
+                      ) : (
+                        stock.quantity
+                      )}
+                    </td>
+                    <td>
+                      {refreshingStocks.includes(stock.symbol) && refreshing ? (
+                        <span className="price-spinner"></span>
+                      ) : (
+                        stock.current_price !== null ? `$${stock.current_price.toFixed(2)}` : 'N/A'
+                      )}
+                    </td>
+                    <td>
+                      {refreshingStocks.includes(stock.symbol) && refreshing ? (
+                        <span className="price-spinner"></span>
+                      ) : (
+                        stock.current_total_value !== null ? `$${stock.current_total_value.toFixed(2)}` : 'N/A'
+                      )}
+                    </td>
+                    <td>
+                      {refreshingStocks.includes(stock.symbol) && refreshing ? (
+                        <span className="price-spinner"></span>
+                      ) : (
+                        stock.percentage_of_portfolio !== null ? `${stock.percentage_of_portfolio}%` : 'N/A'
+                      )}
+                    </td>
+                    <td>
+                      {editSymbol === stock.symbol ? (
+                        <div className="action-buttons">
+                          <button className="action-btn edit" onClick={() => handleEditSave(stock.symbol)}>Save</button>
+                          <button className="action-btn" onClick={() => setEditSymbol(null)}>Cancel</button>
+                        </div>
+                      ) : (
+                        <div className="action-buttons">
+                          <button className="action-btn edit" onClick={() => handleEditClick(stock)}>Edit</button>
+                          <button className="action-btn delete" onClick={() => handleDelete(stock.symbol)}>Delete</button>
+                        </div>
+                      )}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {portfolio.stocks.map(stock => (
-                    <tr key={stock.symbol}>
-                      <td>{stock.symbol}</td>
-                      <td>
-                        {editSymbol === stock.symbol ? (
-                          <input
-                            type="number"
-                            value={editQuantity}
-                            min="0"
-                            step="any"
-                            onChange={e => setEditQuantity(e.target.value)}
-                            style={{ width: '70px' }}
-                          />
-                        ) : (
-                          stock.quantity
-                        )}
-                      </td>
-                      <td>
-                        {refreshingStocks.includes(stock.symbol) && refreshing ? (
-                          <span className="price-spinner"></span>
-                        ) : (
-                          stock.current_price !== null ? `$${stock.current_price.toFixed(2)}` : 'N/A'
-                        )}
-                      </td>
-                      <td>
-                        {refreshingStocks.includes(stock.symbol) && refreshing ? (
-                          <span className="price-spinner"></span>
-                        ) : (
-                          stock.current_total_value !== null ? `$${stock.current_total_value.toFixed(2)}` : 'N/A'
-                        )}
-                      </td>
-                      <td>
-                        {refreshingStocks.includes(stock.symbol) && refreshing ? (
-                          <span className="price-spinner"></span>
-                        ) : (
-                          stock.percentage_of_portfolio !== null ? `${stock.percentage_of_portfolio}%` : 'N/A'
-                        )}
-                      </td>
-                      <td>
-                        {editSymbol === stock.symbol ? (
-                          <div className="action-buttons">
-                            <button className="action-btn edit" onClick={() => handleEditSave(stock.symbol)}>Save</button>
-                            <button className="action-btn" onClick={() => setEditSymbol(null)}>Cancel</button>
-                          </div>
-                        ) : (
-                          <div className="action-buttons">
-                            <button className="action-btn edit" onClick={() => handleEditClick(stock)}>Edit</button>
-                            <button className="action-btn delete" onClick={() => handleDelete(stock.symbol)}>Delete</button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td colSpan="4"><strong>Grand Total</strong></td>
-                    <td>{refreshing ? <span className="price-spinner"></span> : `$${portfolio.grand_total_portfolio_value}`}</td>
-                    <td></td>
-                  </tr>
-                </tfoot>
-              </table>
-            ) : (
-              <div>No stocks in portfolio yet.</div>
-            )}
-          </div>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan="4"><strong>Grand Total</strong></td>
+                  <td>{refreshing ? <span className="price-spinner"></span> : `$${portfolio.grand_total_portfolio_value}`}</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          ) : (
+            <div>No stocks in portfolio yet.</div>
+          )}
         </div>
       </div>
       {chartData.length > 0 && (
-        <div className="pie-chart-section">
-          <div className="pie-card">
+        <div className="container pie-chart-container">
+          <h1>Portfolio Pie Chart</h1>
             <PieChart width={350} height={250}>
               <Pie
                 data={chartData}
@@ -322,10 +320,9 @@ function App() {
               <Tooltip />
               <Legend />
             </PieChart>
-          </div>
         </div>
       )}
-    </>
+    </div>
   )
 }
 
