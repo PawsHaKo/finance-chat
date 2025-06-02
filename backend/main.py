@@ -11,11 +11,14 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
 from fastapi.responses import JSONResponse
+import finnhub
 
-# Configuration for Alpha Vantage API
 load_dotenv()
-ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
-ALPHA_VANTAGE_BASE_URL = "https://www.alphavantage.co/query"
+# Configuration for Finnhub API
+FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY")
+
+# Finnhub client (global, reuse for all requests)
+finnhub_client = finnhub.Client(api_key=FINNHUB_API_KEY) if FINNHUB_API_KEY else None
 
 DATABASE_URL = "sqlite+aiosqlite:///./portfolio.db"
 engine = create_async_engine(DATABASE_URL, echo=False, future=True)
@@ -71,47 +74,24 @@ async def read_root():
     return {"message": "Welcome to the Finance Portfolio API"}
 
 async def get_current_stock_price(symbol: str) -> Optional[float]:
-    """Fetches the current stock price for a given symbol from Alpha Vantage."""
-    if not ALPHA_VANTAGE_API_KEY:
-        print("WARNING: Alpha Vantage API key not set. Using placeholder data.")
+    """Fetches the current stock price for a given symbol from Finnhub."""
+    if not FINNHUB_API_KEY or not finnhub_client:
+        print("WARNING: Finnhub API key not set. Using placeholder data.")
         # Placeholder logic if API key is not set, useful for initial testing without a key
         if symbol.upper() == "AAPL": return 150.00
         if symbol.upper() == "MSFT": return 300.00
         if symbol.upper() == "GOOGL": return 2700.00
         return None
-
-    params = {
-        "function": "GLOBAL_QUOTE",
-        "symbol": symbol,
-        "apikey": ALPHA_VANTAGE_API_KEY
-    }
     try:
-        response = requests.get(ALPHA_VANTAGE_BASE_URL, params=params, timeout=10) # Added timeout
-        response.raise_for_status()  # Raises an HTTPError for bad responses (4XX or 5XX)
-        data = response.json()
-        global_quote_data = data.get("Global Quote")
-        if not global_quote_data:
-            print(f"'Global Quote' not found in Alpha Vantage response for {symbol}. Response: {data}")
-            if "Note" in data:
-                 print(f"API Note for {symbol}: {data['Note']}")
-            return None
-        price_str = global_quote_data.get("05. price")
-        if price_str:
-            return float(price_str)
+        quote = await asyncio.to_thread(finnhub_client.quote, symbol.upper())
+        price = quote.get("c")
+        if price is not None and price != 0:
+            return float(price)
         else:
-            print(f"Price not found in 'Global Quote' for {symbol}. Data: {global_quote_data}")
+            print(f"Price not found in Finnhub response for {symbol}. Data: {quote}")
             return None
-    except requests.exceptions.Timeout:
-        print(f"Timeout while fetching price for {symbol} from Alpha Vantage.")
-        return None
-    except requests.exceptions.HTTPError as e:
-        print(f"HTTP error fetching price for {symbol} from Alpha Vantage: {e}")
-        return None
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching price for {symbol} from Alpha Vantage: {e}")
-        return None
-    except ValueError:
-        print(f"Error parsing price for {symbol} from Alpha Vantage. Raw data: {data}")
+    except Exception as e:
+        print(f"Error fetching price for {symbol} from Finnhub: {e}")
         return None
 
 @app.post("/portfolio/stocks/", response_model=StockBase)
@@ -167,13 +147,14 @@ async def get_portfolio_with_details(session: AsyncSession = Depends(get_session
 
 @app.get("/test-connection")
 async def test_connection():
-    """Test if Alpha Vantage API key is set and can fetch a real price."""
-    if not ALPHA_VANTAGE_API_KEY:
-        return JSONResponse(status_code=200, content={"status": "error", "message": "API key not set."})
+    """Test if Finnhub API key is set and can fetch a real price."""
+    print(f"FINNHUB_API_KEY: {FINNHUB_API_KEY}")
+    if not FINNHUB_API_KEY:
+        return JSONResponse(status_code=200, content={"status": "error", "message": "Finnhub API key not set."})
     try:
         price = await get_current_stock_price("AAPL")
         if price is None:
-            return JSONResponse(status_code=200, content={"status": "error", "message": "Failed to fetch price. Check API key or rate limits.", "details": "No price returned from Alpha Vantage."})
+            return JSONResponse(status_code=200, content={"status": "error", "message": "Failed to fetch price. Check API key or rate limits.", "details": "No price returned from Finnhub."})
         return {"status": "success", "message": "API key works!", "price": price}
     except Exception as e:
         return JSONResponse(status_code=200, content={"status": "error", "message": "Exception occurred while fetching price.", "details": str(e)})
