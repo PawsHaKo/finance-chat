@@ -170,10 +170,13 @@ async def test_connection():
     """Test if Alpha Vantage API key is set and can fetch a real price."""
     if not ALPHA_VANTAGE_API_KEY:
         return JSONResponse(status_code=200, content={"status": "error", "message": "API key not set."})
-    price = await get_current_stock_price("AAPL")
-    if price is None:
-        return JSONResponse(status_code=200, content={"status": "error", "message": "Failed to fetch price. Check API key or rate limits."})
-    return {"status": "success", "message": "API key works!", "price": price}
+    try:
+        price = await get_current_stock_price("AAPL")
+        if price is None:
+            return JSONResponse(status_code=200, content={"status": "error", "message": "Failed to fetch price. Check API key or rate limits.", "details": "No price returned from Alpha Vantage."})
+        return {"status": "success", "message": "API key works!", "price": price}
+    except Exception as e:
+        return JSONResponse(status_code=200, content={"status": "error", "message": "Exception occurred while fetching price.", "details": str(e)})
 
 @app.patch("/portfolio/stocks/{symbol}", response_model=StockBase)
 async def update_stock(symbol: str = Path(..., description="Stock symbol"), stock: StockBase = None, session: AsyncSession = Depends(get_session)):
