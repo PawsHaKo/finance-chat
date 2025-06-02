@@ -183,6 +183,11 @@ async def delete_stock(symbol: str = Path(..., description="Stock symbol"), sess
     await session.commit()
     return {"detail": f"Stock {symbol.upper()} deleted."}
 
+@app.get("/portfolio/stocks/refresh", response_model=PortfolioDetailResponse)
+async def refresh_portfolio_prices(session: AsyncSession = Depends(get_session)):
+    """Explicitly refresh and return the portfolio with updated prices (does not modify DB)."""
+    return await get_portfolio_with_details(session)
+
 @app.get("/portfolio/stocks/{symbol}", response_model=StockPortfolioItem)
 async def get_stock_with_details(symbol: str = Path(..., description="Stock symbol"), session: AsyncSession = Depends(get_session)):
     """Retrieve a single stock in the portfolio with current price, total value, and percentage of portfolio."""

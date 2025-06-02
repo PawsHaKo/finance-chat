@@ -13,6 +13,8 @@ function App() {
   const [testLoading, setTestLoading] = useState(false)
   const [editSymbol, setEditSymbol] = useState(null)
   const [editQuantity, setEditQuantity] = useState('')
+  const [refreshing, setRefreshing] = useState(false)
+  const [refreshingStocks, setRefreshingStocks] = useState([])
 
   // Fetch portfolio on mount and after adding stock
   const fetchPortfolio = async () => {
@@ -151,6 +153,25 @@ function App() {
     }
   }
 
+  // New: Refresh prices only (keep table visible, show spinner in price/value columns)
+  const refreshPrices = async () => {
+    if (!portfolio || !portfolio.stocks) return
+    setRefreshing(true)
+    setRefreshingStocks(portfolio.stocks.map(s => s.symbol))
+    setError('')
+    try {
+      const res = await fetch(`${API_BASE}/portfolio/stocks/refresh`)
+      if (!res.ok) throw new Error('Failed to refresh prices')
+      const data = await res.json()
+      setPortfolio(data)
+    } catch (err) {
+      setError('Error refreshing prices.')
+    } finally {
+      setRefreshing(false)
+      setRefreshingStocks([])
+    }
+  }
+
   return (
     <div className="container">
       <h1>Finance Portfolio Tool</h1>
@@ -173,6 +194,9 @@ function App() {
       </form>
       <button onClick={handleTestConnection} disabled={testLoading} style={{marginBottom: '1em'}}>
         {testLoading ? 'Testing...' : 'Test API Connection'}
+      </button>
+      <button onClick={refreshPrices} disabled={refreshing} style={{marginBottom: '1em', marginLeft: '1em'}}>
+        {refreshing ? 'Refreshing...' : 'Refresh Prices'}
       </button>
       {testStatus && (
         <div className={testStatus.status === 'success' ? 'success' : 'error'}>
@@ -212,9 +236,27 @@ function App() {
                     stock.quantity
                   )}
                 </td>
-                <td>{stock.current_price !== null ? `$${stock.current_price.toFixed(2)}` : 'N/A'}</td>
-                <td>{stock.current_total_value !== null ? `$${stock.current_total_value.toFixed(2)}` : 'N/A'}</td>
-                <td>{stock.percentage_of_portfolio !== null ? `${stock.percentage_of_portfolio}%` : 'N/A'}</td>
+                <td>
+                  {refreshingStocks.includes(stock.symbol) && refreshing ? (
+                    <span className="price-spinner"></span>
+                  ) : (
+                    stock.current_price !== null ? `$${stock.current_price.toFixed(2)}` : 'N/A'
+                  )}
+                </td>
+                <td>
+                  {refreshingStocks.includes(stock.symbol) && refreshing ? (
+                    <span className="price-spinner"></span>
+                  ) : (
+                    stock.current_total_value !== null ? `$${stock.current_total_value.toFixed(2)}` : 'N/A'
+                  )}
+                </td>
+                <td>
+                  {refreshingStocks.includes(stock.symbol) && refreshing ? (
+                    <span className="price-spinner"></span>
+                  ) : (
+                    stock.percentage_of_portfolio !== null ? `${stock.percentage_of_portfolio}%` : 'N/A'
+                  )}
+                </td>
                 <td>
                   {editSymbol === stock.symbol ? (
                     <div className="action-buttons">
@@ -234,7 +276,7 @@ function App() {
           <tfoot>
             <tr>
               <td colSpan="4"><strong>Grand Total</strong></td>
-              <td>${portfolio.grand_total_portfolio_value}</td>
+              <td>{refreshing ? <span className="price-spinner"></span> : `$${portfolio.grand_total_portfolio_value}`}</td>
               <td></td>
             </tr>
           </tfoot>
