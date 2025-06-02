@@ -231,23 +231,30 @@ function App() {
   }
 
   // Prepare data for Pie Chart
-  let chartData = (portfolio?.stocks || [])
-    .filter(stock => stock.percentage_of_portfolio != null && stock.percentage_of_portfolio > 0)
+  const stocksData = (portfolio?.stocks || [])
+    .filter(stock => stock.current_total_value != null && stock.current_total_value > 0)
     .map((stock, idx) => ({
       name: stock.symbol,
       value: stock.current_total_value || 0,
       color: STOCK_COLORS[idx % STOCK_COLORS.length]
     }))
 
+  let chartData = [...stocksData]
+  let totalValue = stocksData.reduce((sum, s) => sum + s.value, 0)
   if (showCashInPie && typeof cash === 'number' && cash > 0) {
-    chartData = [
-      ...chartData,
-      {
-        name: 'Cash',
-        value: cash,
-        color: CASH_COLOR
-      }
-    ]
+    chartData.push({
+      name: 'Cash',
+      value: cash,
+      color: CASH_COLOR
+    })
+    totalValue += cash
+  }
+
+  // Pie label function to show correct percentage
+  const renderPieLabel = ({ name, value }) => {
+    if (!totalValue) return ''
+    const percent = ((value / totalValue) * 100).toFixed(1)
+    return `${name}: ${percent}%`
   }
 
   // Cash handlers
@@ -431,7 +438,26 @@ function App() {
       {chartData.length > 0 && (
         <div className="container pie-chart-container">
           <h1>Portfolio Pie Chart</h1>
-          <div style={{ marginBottom: '1em' }}>
+          <div style={{ padding: '4em', margin: '1em 0', background: 'rgba(24,28,38,0.92)', borderRadius: '16px', boxShadow: '0 2px 16px #181c2633' }}>
+            <PieChart width={380} height={380}>
+              <Pie
+                data={chartData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={80}
+                label={renderPieLabel}
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </div>
+          <div style={{ marginTop: '1.5em' }}>
             <label style={{ fontWeight: 500 }}>
               <input
                 type="checkbox"
@@ -442,23 +468,6 @@ function App() {
               Show cash in pie chart
             </label>
           </div>
-          <PieChart width={350} height={250}>
-            <Pie
-              data={chartData}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={80}
-              label
-            >
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Legend />
-          </PieChart>
         </div>
       )}
     </div>
