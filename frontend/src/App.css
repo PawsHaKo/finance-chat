@@ -228,3 +228,47 @@ h1 {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  gap: 2.5rem;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.table-container {
+  flex: 2;
+  min-width: 0;
+  margin-top: 1.5rem;
+}
+
+.pie-card {
+  background: rgba(24, 28, 38, 0.98);
+  border-radius: 16px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.45), 0 0 0 1.5px #23272f;
+  border: 1.5px solid #23272f;
+  padding: 2rem 1.5rem;
+  min-width: 340px;
+  max-width: 400px;
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .flex-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .pie-card {
+    min-width: unset;
+    max-width: 100%;
+    margin: 0 auto 2rem auto;
+  }
+  .table-container {
+    margin-top: 0;
+  }
+}
