@@ -294,6 +294,11 @@ function App() {
     }
   }
 
+  // Calculate total portfolio value (stocks + cash)
+  const stocksTotal = (portfolio?.stocks || []).reduce((sum, s) => sum + (s.current_total_value || 0), 0)
+  const totalPortfolioValue = (typeof cash === 'number' ? cash : 0) + stocksTotal
+  const cashPercentage = totalPortfolioValue > 0 ? ((cash / totalPortfolioValue) * 100).toFixed(2) : null
+
   return (
     <div className="flex-row">
       <div className="container">
@@ -403,7 +408,9 @@ function App() {
                       {refreshingStocks.includes(stock.symbol) && refreshing ? (
                         <span className="price-spinner"></span>
                       ) : (
-                        stock.percentage_of_portfolio !== null ? `${stock.percentage_of_portfolio}%` : 'N/A'
+                        (stock.current_total_value != null && totalPortfolioValue > 0)
+                          ? `${((stock.current_total_value / totalPortfolioValue) * 100).toFixed(2)}%`
+                          : 'N/A'
                       )}
                     </td>
                     <td>
@@ -421,6 +428,16 @@ function App() {
                     </td>
                   </tr>
                 ))}
+                {typeof cash === 'number' && (
+                  <tr key="cash-row" style={{ background: '#23272f' }}>
+                    <td style={{ fontWeight: 600, color: '#FFD700' }}>Cash</td>
+                    <td>–</td>
+                    <td>–</td>
+                    <td>{`$${cash.toFixed(2)}`}</td>
+                    <td>{cashPercentage !== null ? `${cashPercentage}%` : '–'}</td>
+                    <td></td>
+                  </tr>
+                )}
               </tbody>
               <tfoot>
                 <tr>
