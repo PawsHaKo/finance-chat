@@ -35,8 +35,7 @@
 
 ## 5. User Experience
 
-- [ ] Persist chat history (localStorage/session, optional)
-- [ ] Assistant introduces itself on first open
+- [ ] Assistant chat UI can expan for better reading
 
 ## 6. Theming & Customization
 
