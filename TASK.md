@@ -35,7 +35,7 @@
 
 ## 5. User Experience
 
-- [ ] Assistant chat UI can expan for better reading
+- [x] Assistant chat UI can expan for better reading
 
 ## 6. Theming & Customization
 
