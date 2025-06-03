@@ -324,7 +324,6 @@ function App() {
             display: 'flex',
             alignItems: 'center',
             gap: '1.2em',
-            background: 'rgba(34, 34, 59, 0.95)',
             border: '1.5px solid #23272f',
             borderRadius: '12px',
             boxShadow: '0 2px 16px #181c2633',
@@ -337,7 +336,7 @@ function App() {
           <span style={{ fontSize: '1.7em', color: '#FFD700', marginRight: '0.2em' }}>
             💰
           </span>
-          <label htmlFor="cash-balance" style={{ fontWeight: 700, fontSize: '1.1em', color: '#F2E9E4', marginRight: '0.5em' }}>
+          <label htmlFor="cash-balance" id="cash-balance-label" style={{ fontWeight: 700, fontSize: '1.1em', marginRight: '0.5em' }}>
             Cash Balance
           </label>
           <input
@@ -353,8 +352,6 @@ function App() {
               padding: '0.4em 0.7em',
               border: '1.5px solid #60a5fa',
               borderRadius: '6px',
-              background: '#181c26',
-              color: '#F2E9E4',
               outline: 'none',
               boxShadow: '0 1px 6px #2563eb22',
               transition: 'border 0.2s, box-shadow 0.2s',
@@ -513,7 +510,7 @@ function App() {
                   </tr>
                 ))}
                 {showCashInPie && typeof cash === 'number' && (
-                  <tr key="cash-row" style={{ background: '#23272f' }}>
+                  <tr key="cash-row">
                     <td style={{ fontWeight: 600, color: '#FFD700' }}>Cash</td>
                     <td>–</td>
                     <td>–</td>
@@ -539,7 +536,7 @@ function App() {
       {chartData.length > 0 && (
         <div className="container pie-chart-container">
           <h1>Portfolio Pie Chart</h1>
-          <div style={{ padding: '4em', margin: '1em 0', background: 'rgba(24,28,38,0.92)', borderRadius: '16px', boxShadow: '0 2px 16px #181c2633' }}>
+          <div style={{ padding: '4em', margin: '1em 0', borderRadius: '16px', boxShadow: '0 2px 16px #181c2633' }}>
             <PieChart width={380} height={380}>
               <Pie
                 data={chartData}
