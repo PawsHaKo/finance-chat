@@ -3,6 +3,7 @@ import './App.css'
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'
 import AssistantBall from './components/AssistantBall'
 import AssistantChatPopup from './components/AssistantChatPopup'
+import CsvImportModal from './components/CsvImportModal'
 
 const API_BASE = 'http://localhost:8000'
 
@@ -61,6 +62,8 @@ function App() {
   const [cashSuccess, setCashSuccess] = useState('')
   const [showCashInPie, setShowCashInPie] = useState(true)
   const [assistantOpen, setAssistantOpen] = useState(false)
+  const [csvModalOpen, setCsvModalOpen] = useState(false)
+  const [showApiSuccessMark, setShowApiSuccessMark] = useState(false)
 
   // Fetch portfolio and cash on mount
   const fetchPortfolio = async () => {
@@ -141,10 +144,17 @@ function App() {
   const handleTestConnection = async () => {
     setTestLoading(true)
     setTestStatus(null)
+    setShowApiSuccessMark(false)
     try {
       const res = await fetch(`${API_BASE}/test-connection`)
       const data = await res.json()
       setTestStatus(data)
+      if (data.status === 'success') {
+        setTimeout(() => {
+          setTestStatus(null)
+          setShowApiSuccessMark(true)
+        }, 3000)
+      }
     } catch (err) {
       setTestStatus({ status: 'error', message: 'Failed to connect to backend.' })
     } finally {
@@ -378,6 +388,9 @@ function App() {
               <button onClick={refreshPrices} disabled={refreshing}>
                 {refreshing ? 'Refreshing...' : 'Refresh Prices'}
               </button>
+              <button onClick={() => setCsvModalOpen(true)} style={{ background: 'linear-gradient(90deg, #2563eb 60%, #60a5fa 100%)', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600, fontSize: '1em', padding: '0.5em 1.3em', cursor: 'pointer', boxShadow: '0 2px 8px #2563eb33', letterSpacing: '0.03em' }}>
+                Import CSV
+              </button>
               <button onClick={handleTestConnection} disabled={testLoading}>
                 {testLoading ? 'Testing...' : 'Test API Connection'}
               </button>
@@ -386,9 +399,30 @@ function App() {
                   {testStatus.message} {testStatus.price ? `(Sample price: $${testStatus.price})` : ''}
                 </div>
               )}
+              {showApiSuccessMark && (
+                <div style={{
+                  color: '#22c55e',
+                  background: '#d1fae5',
+                  borderRadius: '50%',
+                  width: '1.4em',
+                  height: '1.4em',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginLeft: '0.5em',
+                  border: '2px solid #22c55e',
+                  fontSize: '1em',
+                  boxShadow: '0 0 4px #22c55e44',
+                }} title="API key works!">
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 11.5l3 3 6-6" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              )}
             </div>
           </div>
         </div>
+        <CsvImportModal open={csvModalOpen} onClose={() => setCsvModalOpen(false)} onSuccess={fetchPortfolio} />
         <form onSubmit={handleAddStock} className="add-stock-form">
           <input
             type="text"
