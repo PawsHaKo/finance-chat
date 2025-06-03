@@ -269,11 +269,21 @@ async def set_cash(cash: CashResponse, session: AsyncSession = Depends(get_sessi
     await session.refresh(meta)
     return CashResponse(cash=meta.cash)
 
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai")
-LLM_API_KEY = os.getenv("LLM_API_KEY", "")
-LLM_API_BASE = os.getenv("LLM_API_BASE", "https://api.openai.com/v1")
-LLM_GEMINI_API_KEY = os.getenv("LLM_GEMINI_API_KEY", "")
-LLM_GEMINI_API_BASE = os.getenv("LLM_GEMINI_API_BASE", "https://generativelanguage.googleapis.com/v1beta/models")
+# --- LLM Configuration ---
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai") # Supported: "openai", "gemini"
+
+# Generic model name override - if set, applies to the chosen provider
+LLM_MODEL_NAME = os.getenv("LLM_MODEL_NAME") # e.g., "gpt-4o", "gemini-1.5-pro-latest"
+
+# OpenAI Specific Configuration
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_BASE = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
+DEFAULT_OPENAI_MODEL = "gpt-3.5-turbo"
+
+# Gemini Specific Configuration
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_API_BASE = os.getenv("GEMINI_API_BASE", "https://generativelanguage.googleapis.com/v1beta/models")
+DEFAULT_GEMINI_MODEL = os.getenv("DEFAULT_GEMINI_MODEL", "gemini-pro")
 
 class ChatMessage(BaseModel):
     role: str  # 'user' or 'assistant'
@@ -286,18 +296,24 @@ class AssistantChatRequest(BaseModel):
 @app.post("/assistant/chat")
 async def assistant_chat(request: AssistantChatRequest = Body(...)):
     """Proxy chat to LLM provider, passing messages and portfolio context."""
+    system_prompt = "You are a helpful finance assistant."
+    if request.portfolio:
+        system_prompt += f"\nHere is the user's portfolio data: {request.portfolio}"
+
     if LLM_PROVIDER == "openai":
-        url = f"{LLM_API_BASE}/chat/completions"
+        actual_model = LLM_MODEL_NAME or DEFAULT_OPENAI_MODEL
+        api_key = OPENAI_API_KEY
+        api_base = OPENAI_API_BASE
+        if not api_key:
+            raise HTTPException(status_code=500, detail="OpenAI API key (OPENAI_API_KEY) not configured.")
+
+        url = f"{api_base}/chat/completions"
         headers = {
-            "Authorization": f"Bearer {LLM_API_KEY}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
-        # Compose system prompt with portfolio context if provided
-        system_prompt = "You are a helpful finance assistant."
-        if request.portfolio:
-            system_prompt += f"\nHere is the user's portfolio data: {request.portfolio}"
         payload = {
-            "model": os.getenv("LLM_MODEL", "gpt-3.5-turbo"),
+            "model": actual_model,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 *[{"role": m.role, "content": m.content} for m in request.messages]
@@ -309,32 +325,54 @@ async def assistant_chat(request: AssistantChatRequest = Body(...)):
             resp.raise_for_status()
             data = resp.json()
             return {"reply": data["choices"][0]["message"]["content"]}
+
     elif LLM_PROVIDER == "gemini":
-        # Gemini (Google AI Studio) support
-        model = os.getenv("LLM_GEMINI_MODEL", "gemini-pro")
-        url = f"{LLM_GEMINI_API_BASE}/{model}:generateContent?key={LLM_GEMINI_API_KEY}"
-        # Compose system prompt with portfolio context if provided
-        system_prompt = "You are a helpful finance assistant."
-        if request.portfolio:
-            system_prompt += f"\nHere is the user's portfolio data: {request.portfolio}"
-        # Gemini expects a single list of content blocks
-        content_blocks = [
-            {"role": "user", "parts": [{"text": system_prompt}]}
-        ]
-        for m in request.messages:
-            if m.role == "user":
-                content_blocks.append({"role": "user", "parts": [{"text": m.content}]})
-            elif m.role == "assistant":
-                content_blocks.append({"role": "model", "parts": [{"text": m.content}]})
-        payload = {"contents": content_blocks}
+        actual_model = LLM_MODEL_NAME or DEFAULT_GEMINI_MODEL
+        api_key = GEMINI_API_KEY
+        api_base = GEMINI_API_BASE
+        if not api_key:
+            raise HTTPException(status_code=500, detail="Gemini API key (GEMINI_API_KEY) not configured.")
+
+        url = f"{api_base}/{actual_model}:generateContent?key={api_key}"
+        # Gemini expects a specific structure for messages and system prompt handling
+        contents = []
+        # Add system prompt as the first user message part if it's not implicitly handled by the model
+        # For Gemini, it's better to prepend it to the first user message or have a specific turn.
+        # Here, we'll prepend it to the history before the user's actual messages.
+        
+        # Convert messages to Gemini format
+        # System prompt is handled by being part of the overall prompt history.
+        # The initial system prompt is a user turn, then assistant response, then user query.
+        # We will build the Gemini `contents` list from the request.messages, prefixing the system_prompt.
+
+        gemini_messages = [] 
+        # Start with the system prompt as the initial context for the model.
+        # Gemini usually takes history in pairs of user/model.
+        # If the first message from history is user, we can prepend system context there.
+        # If it's assistant (e.g. initial greeting), system prompt could be a preceding user turn.
+
+        # Simplified: add system prompt as a separate user turn if messages don't cover it.
+        # For now, the system prompt is part of the first user message for Gemini for simplicity.
+        # Let's adjust the payload based on typical Gemini API interactions.
+        
+        # Construct history for Gemini: it wants alternating user and model roles.
+        # The very first instruction can be a user role.
+        gemini_contents = [{"role": "user", "parts": [{"text": system_prompt}]}]
+        if request.messages:
+            # Add a model part to complete the first turn if system_prompt was the user part
+            gemini_contents.append({"role": "model", "parts": [{"text": "Understood. I am ready to assist with the portfolio."}]}) 
+
+        for msg in request.messages:
+            role = "user" if msg.role == "user" else "model"
+            gemini_contents.append({"role": role, "parts": [{"text": msg.content}]})
+
+        payload = {"contents": gemini_contents}
         headers = {"Content-Type": "application/json"}
         async with httpx.AsyncClient() as client:
             resp = await client.post(url, headers=headers, json=payload, timeout=30)
             resp.raise_for_status()
             data = resp.json()
-            # Gemini's response structure
             reply = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
             return {"reply": reply}
     else:
-        # Add more providers here as needed
         raise HTTPException(status_code=400, detail=f"LLM provider '{LLM_PROVIDER}' not supported yet.") 
