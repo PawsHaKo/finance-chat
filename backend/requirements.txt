@@ -4,4 +4,4 @@ requests
 sqlalchemy[asyncio]
 aiosqlite 
 python-dotenv 
-finnhub 
+finnhub-python
