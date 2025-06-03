@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, Path
+from fastapi import FastAPI, HTTPException, Depends, Path, Body
 from pydantic import BaseModel
 from typing import List, Optional
 import requests
@@ -12,6 +12,7 @@ import os
 from dotenv import load_dotenv
 from fastapi.responses import JSONResponse
 import finnhub
+import httpx
 
 load_dotenv()
 # Configuration for Finnhub API
@@ -266,4 +267,46 @@ async def set_cash(cash: CashResponse, session: AsyncSession = Depends(get_sessi
     meta.cash = cash.cash
     await session.commit()
     await session.refresh(meta)
-    return CashResponse(cash=meta.cash) 
+    return CashResponse(cash=meta.cash)
+
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai")
+LLM_API_KEY = os.getenv("LLM_API_KEY", "")
+LLM_API_BASE = os.getenv("LLM_API_BASE", "https://api.openai.com/v1")
+
+class ChatMessage(BaseModel):
+    role: str  # 'user' or 'assistant'
+    content: str
+
+class AssistantChatRequest(BaseModel):
+    messages: list[ChatMessage]
+    portfolio: dict = None  # Optional portfolio context
+
+@app.post("/assistant/chat")
+async def assistant_chat(request: AssistantChatRequest = Body(...)):
+    """Proxy chat to LLM provider, passing messages and portfolio context."""
+    if LLM_PROVIDER == "openai":
+        url = f"{LLM_API_BASE}/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {LLM_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        # Compose system prompt with portfolio context if provided
+        system_prompt = "You are a helpful finance assistant."
+        if request.portfolio:
+            system_prompt += f"\nHere is the user's portfolio data: {request.portfolio}"
+        payload = {
+            "model": os.getenv("LLM_MODEL", "gpt-3.5-turbo"),
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                *[{"role": m.role, "content": m.content} for m in request.messages]
+            ],
+            "temperature": 0.7
+        }
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(url, headers=headers, json=payload, timeout=30)
+            resp.raise_for_status()
+            data = resp.json()
+            return {"reply": data["choices"][0]["message"]["content"]}
+    else:
+        # Add more providers here as needed
+        raise HTTPException(status_code=400, detail=f"LLM provider '{LLM_PROVIDER}' not supported yet.") 

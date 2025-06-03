@@ -22,9 +22,9 @@
 
 ## 3. Portfolio Integration
 
-- [ ] Connect chat to portfolio data
-  - [ ] Allow assistant to answer questions about user's portfolio
-  - [ ] Securely pass relevant data to backend
+- [x] Connect chat to portfolio data
+  - [x] Allow assistant to answer questions about user's portfolio
+  - [x] Securely pass relevant data to backend
 
 ## 4. Backend Integration
 

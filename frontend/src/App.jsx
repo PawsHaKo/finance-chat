@@ -539,7 +539,7 @@ function App() {
       )}
       <AssistantBall onClick={() => setAssistantOpen(true)} disabled={assistantOpen} />
       {assistantOpen && (
-        <AssistantChatPopup onClose={() => setAssistantOpen(false)} />
+        <AssistantChatPopup onClose={() => setAssistantOpen(false)} portfolio={portfolio} />
       )}
     </div>
   )

@@ -10,7 +10,20 @@ function renderMarkdown(text) {
   return { __html: html };
 }
 
-export default function AssistantChatPopup({ onClose }) {
+function getPortfolioSummary(portfolio) {
+  if (!portfolio || !portfolio.stocks) return 'No portfolio data available.';
+  const total = portfolio.grand_total_portfolio_value || 0;
+  const cash = typeof portfolio.cash === 'number' ? portfolio.cash : null;
+  let summary = `Your portfolio total value is **$${total.toLocaleString()}**.`;
+  if (cash !== null) summary += `\n\nCash balance: **$${cash.toLocaleString()}**.`;
+  if (portfolio.stocks.length > 0) {
+    summary += '\n\n**Holdings:**';
+    summary += '\n' + portfolio.stocks.map(s => `- **${s.symbol}**: ${s.quantity} shares, $${s.current_total_value?.toLocaleString() || 'N/A'} (${s.percentage_of_portfolio || 0}% of portfolio)`).join('\n');
+  }
+  return summary;
+}
+
+export default function AssistantChatPopup({ onClose, portfolio }) {
   const [messages, setMessages] = useState([
     { role: 'assistant', content: 'Hi! I\'m your portfolio assistant. Ask me anything about your investments.' }
   ]);
@@ -34,9 +47,15 @@ export default function AssistantChatPopup({ onClose }) {
     setMessages(msgs => [...msgs, { role: 'user', content: trimmed }]);
     setInput('');
     setTyping(true);
-    // Simulate assistant reply
+    // Simulate assistant reply with portfolio data if relevant
     setTimeout(() => {
-      setMessages(msgs => [...msgs, { role: 'assistant', content: `You said: **${trimmed}**\n\n(Portfolio answers coming soon!)` }]);
+      let reply;
+      if (/portfolio|holdings|total|cash|balance|stock|summary|what do i have|my investments/i.test(trimmed)) {
+        reply = getPortfolioSummary(portfolio);
+      } else {
+        reply = `You said: **${trimmed}**\n\n(Portfolio answers coming soon!)`;
+      }
+      setMessages(msgs => [...msgs, { role: 'assistant', content: reply }]);
       setTyping(false);
     }, 1200);
   };
