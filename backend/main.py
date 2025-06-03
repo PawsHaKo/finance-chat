@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, Path, Body
+from fastapi import FastAPI, HTTPException, Depends, Path, Body, UploadFile, File, Form
 from pydantic import BaseModel
 from typing import List, Optional
 import requests
@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 from fastapi.responses import JSONResponse
 import finnhub
 import httpx
+import csv
+from io import StringIO
 
 load_dotenv()
 # Configuration for Finnhub API
@@ -43,6 +45,7 @@ class Stock(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     symbol: Mapped[str] = mapped_column(sa.String, unique=True, index=True)
     quantity: Mapped[float] = mapped_column(sa.Float)
+    unit_cost: Mapped[Optional[float]] = mapped_column(sa.Float, nullable=True)
 
 # SQLAlchemy model for PortfolioMeta (singleton for cash)
 class PortfolioMeta(Base):
@@ -54,6 +57,7 @@ class PortfolioMeta(Base):
 class StockBase(BaseModel):
     symbol: str
     quantity: float
+    unit_cost: Optional[float] = None
 
 # Pydantic model for portfolio item (output, includes current price and value)
 class StockPortfolioItem(StockBase):
@@ -375,4 +379,64 @@ async def assistant_chat(request: AssistantChatRequest = Body(...)):
             reply = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
             return {"reply": reply}
     else:
-        raise HTTPException(status_code=400, detail=f"LLM provider '{LLM_PROVIDER}' not supported yet.") 
+        raise HTTPException(status_code=400, detail=f"LLM provider '{LLM_PROVIDER}' not supported yet.")
+
+@app.post("/portfolio/import-csv/")
+async def import_portfolio_csv(
+    file: UploadFile = File(...),
+    mode: str = Form("replace"),
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    Import portfolio from a CSV file. Mode can be 'replace' (clear all and import) or 'append' (upsert by symbol).
+    CSV columns: 代號 (Symbol), 股數 (Quantity), 單位成本 (Unit Cost)
+    """
+    content = await file.read()
+    decoded = content.decode("utf-8")
+    reader = csv.DictReader(StringIO(decoded))
+    added, updated, skipped, errors = 0, 0, 0, []
+    rows = list(reader)
+    # Map Chinese headers to English keys
+    def get_val(row, *keys):
+        for k in keys:
+            if k in row:
+                return row[k]
+        return None
+    if mode == "replace":
+        await session.execute(sa.delete(Stock))
+        await session.commit()
+    for row in rows:
+        symbol = get_val(row, "代號", "Symbol")
+        quantity = get_val(row, "股數", "Quantity")
+        unit_cost = get_val(row, "單位成本", "Unit Cost")
+        if not symbol or not quantity:
+            skipped += 1
+            continue
+        try:
+            symbol = symbol.strip().upper()
+            quantity = float(quantity)
+            unit_cost_val = float(unit_cost) if unit_cost not in (None, "") else None
+        except Exception as e:
+            errors.append(f"Row error for symbol {symbol}: {e}")
+            skipped += 1
+            continue
+        # Upsert logic
+        result = await session.execute(select(Stock).where(Stock.symbol == symbol))
+        stock = result.scalar_one_or_none()
+        if stock:
+            stock.quantity = quantity
+            stock.unit_cost = unit_cost_val
+            updated += 1
+        else:
+            stock = Stock(symbol=symbol, quantity=quantity, unit_cost=unit_cost_val)
+            session.add(stock)
+            added += 1
+    await session.commit()
+    return {
+        "added": added,
+        "updated": updated,
+        "skipped": skipped,
+        "errors": errors,
+        "mode": mode,
+        "total": added + updated
+    } 

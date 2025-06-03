@@ -1,0 +1,1 @@
+ALTER TABLE stocks ADD COLUMN unit_cost FLOAT NULL; 
