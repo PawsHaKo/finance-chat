@@ -63,6 +63,14 @@ pip install -r requirements.txt
 # Create .env file as described above
 ```
 
+or use uv
+
+```bash
+cd backend
+uv sync
+```
+
+
 #### Run the backend server:
 
 ```bash
