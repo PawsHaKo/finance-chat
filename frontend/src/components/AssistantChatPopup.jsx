@@ -29,6 +29,7 @@ export default function AssistantChatPopup({ onClose, portfolio }) {
   ]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
+  const [error, setError] = useState('');
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -40,24 +41,35 @@ export default function AssistantChatPopup({ onClose, portfolio }) {
 
   const handleInputChange = (e) => setInput(e.target.value);
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
     const trimmed = input.trim();
     if (!trimmed) return;
     setMessages(msgs => [...msgs, { role: 'user', content: trimmed }]);
     setInput('');
     setTyping(true);
-    // Simulate assistant reply with portfolio data if relevant
-    setTimeout(() => {
-      let reply;
-      if (/portfolio|holdings|total|cash|balance|stock|summary|what do i have|my investments/i.test(trimmed)) {
-        reply = getPortfolioSummary(portfolio);
-      } else {
-        reply = `You said: **${trimmed}**\n\n(Portfolio answers coming soon!)`;
-      }
-      setMessages(msgs => [...msgs, { role: 'assistant', content: reply }]);
+    setError('');
+    try {
+      const resp = await fetch('http://localhost:8000/assistant/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            ...messages,
+            { role: 'user', content: trimmed }
+          ],
+          portfolio
+        })
+      });
+      if (!resp.ok) throw new Error('Failed to get assistant reply');
+      const data = await resp.json();
+      setMessages(msgs => [...msgs, { role: 'assistant', content: data.reply }]);
+    } catch (err) {
+      setMessages(msgs => [...msgs, { role: 'assistant', content: 'Sorry, there was an error getting my response.' }]);
+      setError('Error contacting assistant.');
+    } finally {
       setTyping(false);
-    }, 1200);
+    }
   };
 
   return (
@@ -79,6 +91,7 @@ export default function AssistantChatPopup({ onClose, portfolio }) {
         )}
         <div ref={messagesEndRef} />
       </div>
+      {error && <div className="error" style={{margin: '0.5em 1em'}}>{error}</div>}
       <form className="assistant-chat-input-row" onSubmit={handleSend}>
         <input
           type="text"
