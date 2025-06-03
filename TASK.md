@@ -39,7 +39,7 @@
 
 ## 6. Theming & Customization
 
-- [ ] Match website theme (light/dark mode)
+- [x] Match website theme (light/dark mode)
 - [ ] Allow easy customization of assistant appearance/behavior
 
 ---
