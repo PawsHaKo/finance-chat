@@ -272,6 +272,8 @@ async def set_cash(cash: CashResponse, session: AsyncSession = Depends(get_sessi
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai")
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
 LLM_API_BASE = os.getenv("LLM_API_BASE", "https://api.openai.com/v1")
+LLM_GEMINI_API_KEY = os.getenv("LLM_GEMINI_API_KEY", "")
+LLM_GEMINI_API_BASE = os.getenv("LLM_GEMINI_API_BASE", "https://generativelanguage.googleapis.com/v1beta/models")
 
 class ChatMessage(BaseModel):
     role: str  # 'user' or 'assistant'
@@ -307,6 +309,32 @@ async def assistant_chat(request: AssistantChatRequest = Body(...)):
             resp.raise_for_status()
             data = resp.json()
             return {"reply": data["choices"][0]["message"]["content"]}
+    elif LLM_PROVIDER == "gemini":
+        # Gemini (Google AI Studio) support
+        model = os.getenv("LLM_GEMINI_MODEL", "gemini-pro")
+        url = f"{LLM_GEMINI_API_BASE}/{model}:generateContent?key={LLM_GEMINI_API_KEY}"
+        # Compose system prompt with portfolio context if provided
+        system_prompt = "You are a helpful finance assistant."
+        if request.portfolio:
+            system_prompt += f"\nHere is the user's portfolio data: {request.portfolio}"
+        # Gemini expects a single list of content blocks
+        content_blocks = [
+            {"role": "user", "parts": [{"text": system_prompt}]}
+        ]
+        for m in request.messages:
+            if m.role == "user":
+                content_blocks.append({"role": "user", "parts": [{"text": m.content}]})
+            elif m.role == "assistant":
+                content_blocks.append({"role": "model", "parts": [{"text": m.content}]})
+        payload = {"contents": content_blocks}
+        headers = {"Content-Type": "application/json"}
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(url, headers=headers, json=payload, timeout=30)
+            resp.raise_for_status()
+            data = resp.json()
+            # Gemini's response structure
+            reply = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+            return {"reply": reply}
     else:
         # Add more providers here as needed
         raise HTTPException(status_code=400, detail=f"LLM provider '{LLM_PROVIDER}' not supported yet.") 
