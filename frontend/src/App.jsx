@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'
+import AssistantBall from './components/AssistantBall'
+import AssistantChatPopup from './components/AssistantChatPopup'
 
 const API_BASE = 'http://localhost:8000'
 
@@ -58,6 +60,7 @@ function App() {
   const [cashError, setCashError] = useState('')
   const [cashSuccess, setCashSuccess] = useState('')
   const [showCashInPie, setShowCashInPie] = useState(true)
+  const [assistantOpen, setAssistantOpen] = useState(false)
 
   // Fetch portfolio and cash on mount
   const fetchPortfolio = async () => {
@@ -533,6 +536,10 @@ function App() {
             </label>
           </div>
         </div>
+      )}
+      <AssistantBall onClick={() => setAssistantOpen(true)} disabled={assistantOpen} />
+      {assistantOpen && (
+        <AssistantChatPopup onClose={() => setAssistantOpen(false)} />
       )}
     </div>
   )

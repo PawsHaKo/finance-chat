@@ -1,0 +1,22 @@
+.assistant-ball {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #60a5fa 60%, #2563eb 100%);
+  box-shadow: 0 4px 24px rgba(36, 99, 235, 0.25), 0 1.5px 6px #2563eb33;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.assistant-ball:hover, .assistant-ball:focus {
+  box-shadow: 0 8px 32px rgba(36, 99, 235, 0.35), 0 2px 8px #2563eb44;
+  transform: scale(1.07);
+  outline: none;
+} 
