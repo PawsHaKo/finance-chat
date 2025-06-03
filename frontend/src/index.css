@@ -11,6 +11,63 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Assistant Chat Theming Variables (Dark) */
+  --assistant-bg: #181c26;
+  --assistant-bg-alt: #23272f;
+  --assistant-header-gradient: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+  --assistant-user-gradient: linear-gradient(90deg, #60a5fa 60%, #2563eb 100%);
+  --assistant-accent: #60a5fa;
+  --assistant-accent-2: #2563eb;
+  --assistant-text: #fff;
+  --assistant-text-strong: #60a5fa;
+  --assistant-link: #60a5fa;
+  --assistant-error: #f87171;
+  --assistant-code-bg: #181c26;
+  --assistant-code-text: #fbbf24;
+  --assistant-shadow: 0 8px 32px rgba(36, 99, 235, 0.25), 0 2px 8px #2563eb44;
+  --assistant-shadow-expanded: 0 8px 48px 8px #181c2633, 0 2px 8px #2563eb44;
+  --assistant-ball-gradient: linear-gradient(135deg, #60a5fa 60%, #2563eb 100%);
+  --assistant-ball-shadow: 0 4px 24px rgba(36, 99, 235, 0.25), 0 1.5px 6px #2563eb33;
+  --assistant-ball-shadow-hover: 0 8px 32px rgba(36, 99, 235, 0.35), 0 2px 8px #2563eb44;
+
+  /* App Theming Variables (Dark) */
+  --app-bg: #10141a;
+  --app-bg-alt: rgba(24, 28, 38, 0.98);
+  --app-container-bg: rgba(24, 28, 38, 0.98);
+  --app-card-bg: #181c26;
+  --app-table-bg: #181c26;
+  --app-table-header-bg: #23272f;
+  --app-table-border: #23272f;
+  --app-table-header-accent: #60a5fa;
+  --app-table-header-border: #2563eb;
+  --app-table-footer-bg: #23272f;
+  --app-table-footer-text: #fff;
+  --app-text: #e5e7eb;
+  --app-heading: #60a5fa;
+  --app-heading-shadow: 0 0 8px #2563eb44;
+  --app-input-bg: #181c26;
+  --app-input-text: #e5e7eb;
+  --app-input-border: #23272f;
+  --app-input-focus: #60a5fa;
+  --app-input-focus-shadow: 0 0 0 2px #2563eb33;
+  --app-btn-bg: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+  --app-btn-bg-hover: linear-gradient(90deg, #1d4ed8 60%, #60a5fa 100%);
+  --app-btn-text: #fff;
+  --app-btn-shadow: 0 2px 8px #2563eb33;
+  --app-btn-shadow-hover: 0 4px 16px #2563eb55;
+  --app-delete-btn-bg: linear-gradient(90deg, #f87171 60%, #fbbf24 100%);
+  --app-delete-btn-hover: linear-gradient(90deg, #dc2626 60%, #fbbf24 100%);
+  --app-edit-btn-bg: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+  --app-edit-btn-hover: linear-gradient(90deg, #1d4ed8 60%, #60a5fa 100%);
+  --app-error-bg: #2b1a1a;
+  --app-error-text: #f87171;
+  --app-error-border: #7f1d1d;
+  --app-error-shadow: 0 0 8px #7f1d1d33;
+  --app-scrollbar-bg: #181c26;
+  --app-scrollbar-thumb: #23272f;
+  --app-card-border: #23272f;
+  --app-card-shadow: 0 4px 32px rgba(0,0,0,0.45), 0 0 0 1.5px #23272f;
 }
 
 a {
@@ -58,6 +115,63 @@ button:focus-visible {
   :root {
     color: #213547;
     background-color: #ffffff;
+
+    /* Assistant Chat Theming Variables (Light) */
+    --assistant-bg: #f4f7fd;
+    --assistant-bg-alt: #e9eef6;
+    --assistant-header-gradient: linear-gradient(90deg, #60a5fa 60%, #2563eb 100%);
+    --assistant-user-gradient: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+    --assistant-accent: #2563eb;
+    --assistant-accent-2: #60a5fa;
+    --assistant-text: #213547;
+    --assistant-text-strong: #2563eb;
+    --assistant-link: #2563eb;
+    --assistant-error: #dc2626;
+    --assistant-code-bg: #e9eef6;
+    --assistant-code-text: #b45309;
+    --assistant-shadow: 0 8px 32px rgba(96, 165, 250, 0.18), 0 2px 8px #60a5fa33;
+    --assistant-shadow-expanded: 0 8px 48px 8px #60a5fa22, 0 2px 8px #2563eb22;
+    --assistant-ball-gradient: linear-gradient(135deg, #2563eb 60%, #60a5fa 100%);
+    --assistant-ball-shadow: 0 4px 24px rgba(96, 165, 250, 0.18), 0 1.5px 6px #60a5fa33;
+    --assistant-ball-shadow-hover: 0 8px 32px rgba(96, 165, 250, 0.25), 0 2px 8px #2563eb33;
+
+    /* App Theming Variables (Light) */
+    --app-bg: #f7fafc;
+    --app-bg-alt: #f4f7fd;
+    --app-container-bg: #fff;
+    --app-card-bg: #f4f7fd;
+    --app-table-bg: #fff;
+    --app-table-header-bg: #e9eef6;
+    --app-table-border: #d1d5db;
+    --app-table-header-accent: #2563eb;
+    --app-table-header-border: #60a5fa;
+    --app-table-footer-bg: #e9eef6;
+    --app-table-footer-text: #213547;
+    --app-text: #213547;
+    --app-heading: #2563eb;
+    --app-heading-shadow: 0 0 8px #60a5fa33;
+    --app-input-bg: #fff;
+    --app-input-text: #213547;
+    --app-input-border: #d1d5db;
+    --app-input-focus: #2563eb;
+    --app-input-focus-shadow: 0 0 0 2px #60a5fa33;
+    --app-btn-bg: linear-gradient(90deg, #60a5fa 60%, #2563eb 100%);
+    --app-btn-bg-hover: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+    --app-btn-text: #fff;
+    --app-btn-shadow: 0 2px 8px #60a5fa33;
+    --app-btn-shadow-hover: 0 4px 16px #2563eb33;
+    --app-delete-btn-bg: linear-gradient(90deg, #f87171 60%, #fbbf24 100%);
+    --app-delete-btn-hover: linear-gradient(90deg, #dc2626 60%, #fbbf24 100%);
+    --app-edit-btn-bg: linear-gradient(90deg, #60a5fa 60%, #2563eb 100%);
+    --app-edit-btn-hover: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+    --app-error-bg: #fff0f0;
+    --app-error-text: #dc2626;
+    --app-error-border: #fca5a5;
+    --app-error-shadow: 0 0 8px #fca5a533;
+    --app-scrollbar-bg: #e9eef6;
+    --app-scrollbar-thumb: #d1d5db;
+    --app-card-border: #d1d5db;
+    --app-card-shadow: 0 4px 32px #60a5fa22, 0 0 0 1.5px #d1d5db;
   }
   a:hover {
     color: #747bff;
