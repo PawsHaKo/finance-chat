@@ -120,3 +120,4 @@ portfolio.db
 # Misc
 *.swp
 *.swo 
+.idea
