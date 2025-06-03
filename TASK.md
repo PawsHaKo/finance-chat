@@ -15,9 +15,9 @@
 
 ## 2. Chat Functionality
 
-- [ ] Display user and assistant messages
-- [ ] Show typing indicator for assistant
-- [ ] Support markdown formatting in assistant replies
+- [x] Display user and assistant messages
+- [x] Show typing indicator for assistant
+- [x] Support markdown formatting in assistant replies
 - [ ] (Optional) Support file/image upload
 
 ## 3. Portfolio Integration
@@ -28,9 +28,10 @@
 
 ## 4. Backend Integration
 
-- [ ] Connect chat UI to assistant backend (API)
+- [x] Connect chat UI to assistant backend (API)
+- [x] Error handling and fallback messages
 - [ ] Handle streaming responses (optional)
-- [ ] Error handling and fallback messages
+- [x] LLM provider/model configurable via environment variables (OpenAI, Gemini supported)
 
 ## 5. User Experience
 
