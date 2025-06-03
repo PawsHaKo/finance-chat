@@ -15,6 +15,7 @@ import finnhub
 import httpx
 import csv
 from io import StringIO
+import unicodedata
 
 load_dotenv()
 # Configuration for Finnhub API
@@ -392,15 +393,35 @@ async def import_portfolio_csv(
     CSV columns: 代號 (Symbol), 股數 (Quantity), 單位成本 (Unit Cost)
     """
     content = await file.read()
-    decoded = content.decode("utf-8")
+    # Try utf-8, then big5, then gbk
+    for encoding in ["utf-8", "big5", "gbk"]:
+        try:
+            decoded = content.decode(encoding)
+            break
+        except Exception:
+            decoded = None
+    if decoded is None:
+        return {"error": "Could not decode CSV file. Please use UTF-8, Big5, or GBK encoding."}
+    # Normalize all whitespace in headers and values
+    def normalize(s):
+        if s is None:
+            return None
+        s = unicodedata.normalize('NFKC', s)
+        s = s.replace('\u00A0', ' ').replace('\ufeff', '')  # Remove non-breaking space and BOM
+        return s.strip()
     reader = csv.DictReader(StringIO(decoded))
+    # Normalize fieldnames
+    reader.fieldnames = [normalize(h) for h in reader.fieldnames]
     added, updated, skipped, errors = 0, 0, 0, []
     rows = list(reader)
-    # Map Chinese headers to English keys
+    # Diagnostic: capture headers and first row
+    debug_headers = reader.fieldnames
+    debug_first_row = rows[0] if rows else {}
     def get_val(row, *keys):
         for k in keys:
-            if k in row:
-                return row[k]
+            for rk in row:
+                if normalize(rk) == normalize(k):
+                    return normalize(row[rk])
         return None
     if mode == "replace":
         await session.execute(sa.delete(Stock))
@@ -413,9 +434,9 @@ async def import_portfolio_csv(
             skipped += 1
             continue
         try:
-            symbol = symbol.strip().upper()
-            quantity = float(quantity)
-            unit_cost_val = float(unit_cost) if unit_cost not in (None, "") else None
+            symbol = normalize(symbol).upper()
+            quantity = float(quantity.replace(',', ''))
+            unit_cost_val = float(unit_cost.replace(',', '')) if unit_cost not in (None, "") else None
         except Exception as e:
             errors.append(f"Row error for symbol {symbol}: {e}")
             skipped += 1
