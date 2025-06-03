@@ -30,6 +30,7 @@ export default function AssistantChatPopup({ onClose, portfolio }) {
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
   const [error, setError] = useState('');
+  const [expanded, setExpanded] = useState(false);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -73,10 +74,24 @@ export default function AssistantChatPopup({ onClose, portfolio }) {
   };
 
   return (
-    <div className="assistant-chat-popup">
+    <div className={`assistant-chat-popup${expanded ? ' expanded' : ''}`}>
       <div className="assistant-chat-header">
         <span>Assistant</span>
-        <button className="assistant-chat-close" onClick={onClose} aria-label="Close chat">×</button>
+        <div style={{ display: 'flex', gap: '0.5em' }}>
+          <button
+            className="assistant-chat-expand"
+            onClick={() => setExpanded(e => !e)}
+            aria-label={expanded ? 'Restore chat size' : 'Expand chat'}
+            tabIndex={0}
+          >
+            {expanded ? (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 17h4v-2H9v-2h2v-2H7v6zm6-6v2h2v2h-2v2h4v-6h-4z" fill="#fff"/></svg>
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 7h4v2H9v2h2v2H7V7zm6 0v2h2v2h-2v2h4V7h-4z" fill="#fff"/></svg>
+            )}
+          </button>
+          <button className="assistant-chat-close" onClick={onClose} aria-label="Close chat">×</button>
+        </div>
       </div>
       <div className="assistant-chat-messages">
         {messages.map((msg, idx) => (
