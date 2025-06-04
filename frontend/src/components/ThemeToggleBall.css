@@ -1,0 +1,22 @@
+.toggle-theme-ball {
+  position: fixed;
+  bottom: 116px;
+  right: 32px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  background: var(--assistant-ball-gradient);
+  box-shadow: var(--assistant-ball-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.toggle-theme-ball:hover, .toggle-theme-ball:focus {
+  box-shadow: var(--assistant-ball-shadow-hover);
+  transform: scale(1.07);
+  outline: none;
+} 

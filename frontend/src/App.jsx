@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'
 import AssistantBall from './components/AssistantBall'
 import AssistantChatPopup from './components/AssistantChatPopup'
 import CsvImportModal from './components/CsvImportModal'
+import ThemeToggleBall from './components/ThemeToggleBall'
 
 const API_BASE = 'http://localhost:8000'
 
@@ -64,6 +65,7 @@ function App() {
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [csvModalOpen, setCsvModalOpen] = useState(false)
   const [showApiSuccessMark, setShowApiSuccessMark] = useState(false)
+  const [theme, setTheme] = useState('system');
 
   // Fetch portfolio and cash on mount
   const fetchPortfolio = async () => {
@@ -87,7 +89,26 @@ function App() {
 
   useEffect(() => {
     fetchPortfolio()
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      setTheme(savedTheme);
+    }
   }, [])
+
+  useEffect(() => {
+    const root = document.documentElement;
+
+    if (theme === 'light' || theme === 'dark') {
+      root.setAttribute('data-theme', theme);
+    } else {
+      root.removeAttribute('data-theme');
+    }
+
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+  const toggleTheme = () => {
+    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+  };
 
   const fetchStockDetails = async (symbol) => {
     try {
@@ -568,6 +589,7 @@ function App() {
           </div>
         </div>
       )}
+      <ThemeToggleBall theme={theme} toggleTheme={toggleTheme} />
       <AssistantBall onClick={() => setAssistantOpen(true)} disabled={assistantOpen} />
       {assistantOpen && (
         <AssistantChatPopup onClose={() => setAssistantOpen(false)} portfolio={portfolio} />
